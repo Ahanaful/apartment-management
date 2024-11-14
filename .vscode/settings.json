@@ -1,0 +1,10 @@
+{
+    "java.project.sourcePaths": [
+        "."
+    ],
+    "java.project.referencedLibraries": [
+        "lib/kotlin-stdlib-2.1.0-RC.jar",
+        "/Users/mdahanafulalam/Apartment_management/apartment-management/lib/mysql-connector-j-9.1.0.jar",
+        "/Users/mdahanafulalam/Apartment_management/apartment-management/lib/java-dotenv-5.2.2.jar"
+    ]
+}
