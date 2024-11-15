@@ -1,3 +1,5 @@
+package src;
+
 import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
@@ -7,7 +9,7 @@ public class dialoguebox extends JFrame {
     private JTextField residentSearchField, trackingNumberField, recipientField;
     private JTextArea residentInfoArea;
 
-    public ApartmentManagementApp() {
+    public dialoguebox() {
         setTitle("Apartment Community Management System");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -131,6 +133,6 @@ public class dialoguebox extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ApartmentManagementApp().setVisible(true));
+        SwingUtilities.invokeLater(() -> new dialoguebox().setVisible(true));
     }
 }
