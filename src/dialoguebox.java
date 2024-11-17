@@ -136,7 +136,7 @@ public class dialoguebox extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new dialoguebox().setVisible(true));
-    }
+    // public static void main(String[] args) {
+    //     SwingUtilities.invokeLater(() -> new dialoguebox().setVisible(true));
+    // }
 }
