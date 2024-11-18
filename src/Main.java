@@ -19,7 +19,7 @@
 //         System.out.println("Add Package");
 //         int residentID = scanner.nextInt();
 //         manager.addPackage(residentID);
-//         manager.checkPackages(residentID);
+//         //manager.checkPackages(residentID);
 //         scanner.close();
 //     }
 // }

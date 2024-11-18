@@ -38,14 +38,13 @@ public class ApartmentManager {
     }
 
     public String addPackage(int residentId) {
-        String countSql = "SELECT COUNT(*) + 1 AS NextPackageNumber FROM packages WHERE ResidentID = ?";
+        String countSql = "SELECT COUNT(*) + 1 AS NextPackageNumber FROM packages";
         String insertSql = "INSERT INTO packages (ResidentID, TrackingNumber, Delivered) VALUES (?, ?, 'NO')";
         String trackingNumber = null;
 
         try (Connection connection = DatabaseConnection.getConnection()) {
             int nextPackageNumber = 0;
             try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
-                countStatement.setInt(1, residentId);
                 try (ResultSet resultSet = countStatement.executeQuery()) {
                     if (resultSet.next()) {
                         nextPackageNumber = resultSet.getInt("NextPackageNumber");
@@ -94,8 +93,17 @@ public class ApartmentManager {
         }
     }
 
+    // public ResultSet searchResident(String searchText) throws SQLException {
+    //     String sql = "SELECT * FROM residents WHERE FirstName LIKE ? OR LastName LIKE ? OR ResidentID = ?";
+    //     Connection connection = DatabaseConnection.getConnection();
+    //     PreparedStatement statement = connection.prepareStatement(sql);
+    //     statement.setString(1, "%" + searchText + "%");
+    //     statement.setString(2, "%" + searchText + "%");
+    //     statement.setString(3, searchText);
+    //     return statement.executeQuery();
+    // }
     public ResultSet searchResident(String searchText) throws SQLException {
-        String sql = "SELECT * FROM residents WHERE FirstName LIKE ? OR LastName LIKE ? OR ResidentID = ?";
+        String sql = "SELECT * FROM residents WHERE LOWER(FirstName) LIKE LOWER(?) OR LOWER(LastName) LIKE LOWER(?) OR ResidentID = ?";
         Connection connection = DatabaseConnection.getConnection();
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.setString(1, "%" + searchText + "%");
