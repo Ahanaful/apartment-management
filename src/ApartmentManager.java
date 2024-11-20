@@ -1,6 +1,7 @@
 package src;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
 
@@ -112,6 +113,31 @@ public class ApartmentManager {
             return new ArrayList<>();
         }
     }
+
+    public boolean markDelivered(String trackingNumber) {
+        try {
+            List<String> packages = Files.readAllLines(Paths.get("src/packages.txt"));
+            List<String> updatedPackages = new ArrayList<>();
+            boolean found = false;
+
+            for (String pkg : packages) {
+                if (pkg.contains("TrackingNumber: " + trackingNumber)) {
+                    pkg = pkg.replace("Delivered: NO", "Delivered: YES");
+                    found = true;
+                }
+                updatedPackages.add(pkg);
+            }
+
+            if (found) {
+                Files.write(Paths.get("src/packages.txt"), updatedPackages);
+            }
+            return found;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // Utility methods for file operations
     public List<String> readLines(String filename) throws IOException {
         List<String> lines = new ArrayList<>();

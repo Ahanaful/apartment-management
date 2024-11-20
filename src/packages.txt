@@ -1,3 +1,4 @@
-ResidentID: 1, TrackingNumber: PKG-00001, Delivered: NO
+ResidentID: 1, TrackingNumber: PKG-00001, Delivered: YES
 ResidentID: 12, TrackingNumber: PKG-00002, Delivered: NO
 ResidentID: 9, TrackingNumber: PKG-00003, Delivered: NO
+ResidentID: 1, TrackingNumber: PKG-00005, Delivered: NO

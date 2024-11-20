@@ -10,7 +10,7 @@ import java.io.FileReader;
 
 
 public class DialogueBox extends JFrame {
-    private JTextField residentSearchField, trackingNumberField, residentIdField;
+    private JTextField residentSearchField, trackingNumberField, residentIdField, tempCardResidentIdField;
     private JTextArea residentInfoArea, packageInfoArea, cardStatus;
     private ApartmentManager apartmentManager;
 
@@ -23,7 +23,7 @@ public class DialogueBox extends JFrame {
             }
         private void initComponents() {
             JTabbedPane tabbedPane = new JTabbedPane();
-    
+            trackingNumberField = new JTextField();
             tabbedPane.addTab("Residents", createResidentPanel());
             tabbedPane.addTab("Packages", createPackagePanel());
             tabbedPane.addTab("Temporary Cards", createTempCardPanel());
@@ -55,24 +55,24 @@ public class DialogueBox extends JFrame {
 
     private JPanel createPackagePanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        JPanel formPanel = new JPanel(new GridLayout(5, 2));
+        JPanel formPanel = new JPanel(new GridLayout(4, 2));
 
         residentIdField = new JTextField(15);
-        trackingNumberField = new JTextField(15);
 
         formPanel.add(new JLabel("Resident ID:"));
         formPanel.add(residentIdField);
-        formPanel.add(new JLabel("Tracking Number:"));
-        formPanel.add(trackingNumberField);
 
         JButton addButton = new JButton("Add Package");
         JButton checkButton = new JButton("Check Packages");
+        JButton markDeliveredButton = new JButton("Mark as Delivered");
 
         addButton.addActionListener(e -> addPackage());
         checkButton.addActionListener(e -> checkPackages());
+        markDeliveredButton.addActionListener(e -> markPackageDelivered());
 
         formPanel.add(addButton);
         formPanel.add(checkButton);
+        formPanel.add(markDeliveredButton);
 
         packageInfoArea = new JTextArea();
         packageInfoArea.setEditable(false);
@@ -151,11 +151,15 @@ public class DialogueBox extends JFrame {
             for (String pkg : packages) {
                 // Parse the package string
                 String[] parts = pkg.split(", ");
-                String trackingNum = parts[1].split(": ")[1];
-                String delivered = parts[2].split(": ")[1];
-                
-                displayText.append("Tracking Number: ").append(trackingNum).append("\n");
-                displayText.append("Delivered: ").append(delivered).append("\n\n");
+                // Extract resident ID and check for exact match
+                int pkgResidentId = Integer.parseInt(parts[0].split(": ")[1]);
+                if (pkgResidentId == residentId) {  // Only show packages for exact ID match
+                    String trackingNum = parts[1].split(": ")[1];
+                    String delivered = parts[2].split(": ")[1];
+                    
+                    displayText.append("Tracking Number: ").append(trackingNum).append("\n");
+                    displayText.append("Delivered: ").append(delivered).append("\n\n");
+                }
             }
             packageInfoArea.setText(displayText.length() > 0 ? displayText.toString() : "No packages found.");
         } catch (NumberFormatException e) {
@@ -190,7 +194,7 @@ public class DialogueBox extends JFrame {
     }
     private void handleTempCardCheckout() {
         try {
-            int residentId = Integer.parseInt(residentIdField.getText());
+            int residentId = Integer.parseInt(tempCardResidentIdField.getText());
             
             if (isCardAlreadyCheckedOut(residentId)) {
                 cardStatus.setText("Cannot issue temp card - Resident already has a card checked out");
@@ -222,7 +226,7 @@ public class DialogueBox extends JFrame {
 
     private void handleTempCardReturn() {
         try {
-            int residentId = Integer.parseInt(residentIdField.getText());
+            int residentId = Integer.parseInt(tempCardResidentIdField.getText());
             
             // First check if they actually have a card checked out
             if (!isCardAlreadyCheckedOut(residentId)) {
@@ -258,9 +262,10 @@ public class DialogueBox extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         JPanel inputPanel = new JPanel(new FlowLayout());
         
-        // Use the existing residentIdField instead of creating a new one
+        // Create and use new dedicated field for temp cards
+        tempCardResidentIdField = new JTextField(10);
         inputPanel.add(new JLabel("Resident ID:"));
-        inputPanel.add(residentIdField);
+        inputPanel.add(tempCardResidentIdField);
         
         JButton checkoutButton = new JButton("Checkout Card");
         JButton returnButton = new JButton("Return Card");
@@ -292,5 +297,24 @@ public class DialogueBox extends JFrame {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private void markPackageDelivered() {
+        try {
+            String trackingNumber = JOptionPane.showInputDialog(this, "Enter tracking number to mark as delivered:");
+            if (trackingNumber != null && !trackingNumber.trim().isEmpty()) {
+                boolean success = apartmentManager.markDelivered(trackingNumber.trim());
+                if (success) {
+                    JOptionPane.showMessageDialog(this, "Package marked as delivered successfully.");
+                    // Refresh the package display
+                    checkPackages();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Package not found or already delivered.");
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error marking package as delivered: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
