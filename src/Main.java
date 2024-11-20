@@ -30,6 +30,6 @@ import javax.swing.SwingUtilities;
 public class Main {
     public static void main(String[] args) {
         // Launch the dialoguebox GUI
-        SwingUtilities.invokeLater(() -> new dialoguebox().setVisible(true));
+        SwingUtilities.invokeLater(() -> new DialogueBox().setVisible(true));
     }
 }

@@ -1,0 +1,10 @@
+TempID: 1, ResidentID: 1, TempCardCheckedOut: Yes
+TempID: 2, ResidentID: 2, TempCardCheckedOut: No
+TempID: 3, ResidentID: 3, TempCardCheckedOut: No
+TempID: 4, ResidentID: 4, TempCardCheckedOut: Yes
+TempID: 5, ResidentID: 5, TempCardCheckedOut: No
+TempID: 6, ResidentID: 6, TempCardCheckedOut: Yes
+TempID: 7, ResidentID: 7, TempCardCheckedOut: No
+TempID: 8, ResidentID: 8, TempCardCheckedOut: No
+TempID: 9, ResidentID: 9, TempCardCheckedOut: Yes
+TempID: 10, ResidentID: 10, TempCardCheckedOut: No

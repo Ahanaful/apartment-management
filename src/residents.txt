@@ -1,0 +1,10 @@
+ResidentID: 1, FirstName: Alice, LastName: Johnson, RoomNumber: 101
+ResidentID: 2, FirstName: Bob, LastName: Smith, RoomNumber: 102
+ResidentID: 3, FirstName: Charlie, LastName: Davis, RoomNumber: 103
+ResidentID: 4, FirstName: Diana, LastName: Moore, RoomNumber: 104
+ResidentID: 5, FirstName: Edward, LastName: Wilson, RoomNumber: 201
+ResidentID: 6, FirstName: Fiona, LastName: Brown, RoomNumber: 202
+ResidentID: 7, FirstName: George, LastName: White, RoomNumber: 203
+ResidentID: 8, FirstName: Hannah, LastName: Taylor, RoomNumber: 204
+ResidentID: 9, FirstName: Ivy, LastName: Anderson, RoomNumber: 301
+ResidentID: 10, FirstName: Jack, LastName: King, RoomNumber: 302

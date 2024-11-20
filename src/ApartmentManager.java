@@ -1,114 +1,142 @@
 package src;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.io.*;
+import java.util.*;
+import java.nio.charset.StandardCharsets;
 
 public class ApartmentManager {
-
-    public void testDatabaseConnection() {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            if (connection != null) {
-                System.out.println("Database connected successfully!");
-            }
-        } catch (SQLException e) {
-            System.out.println("Error connecting to the database:");
-            e.printStackTrace();
-        }
-    }
+    private static final String RESIDENTS_FILE = "src/residents.txt";
+    private static final String PACKAGES_FILE = "src/packages.txt";
+    private static final String LOCKOUTS_FILE = "src/lockouts.txt";
+    private static final String TEMP_CARDS_FILE = "src/tempCards.txt";
 
     public void addResident(String firstName, String lastName, int roomNumber) {
-        String sql = "INSERT INTO residents (FirstName, LastName, RoomNumber) VALUES (?, ?, ?)";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setString(1, firstName);
-            statement.setString(2, lastName);
-            statement.setInt(3, roomNumber);
-
-            int rowsInserted = statement.executeUpdate();
-            if (rowsInserted > 0) {
-                System.out.println("Resident added successfully!");
-            }
-        } catch (SQLException e) {
+        try {
+            List<String> residents = readLines(RESIDENTS_FILE);
+            int nextId = residents.size() + 1;
+            String newResident = String.format("ResidentID: %d, FirstName: %s, LastName: %s, RoomNumber: %d",
+                    nextId, firstName, lastName, roomNumber);
+            
+            appendToFile(RESIDENTS_FILE, newResident);
+            // Initialize other records
+            appendToFile(LOCKOUTS_FILE, String.format("ResidentID: %d, Lockouts: 0", nextId));
+            appendToFile(TEMP_CARDS_FILE, String.format("ResidentID: %d, TempCardCheckedOut: No", nextId));
+            System.out.println("Resident added successfully!");
+        } catch (IOException e) {
             System.out.println("Error adding resident:");
             e.printStackTrace();
         }
     }
 
     public String addPackage(int residentId) {
-        String countSql = "SELECT COUNT(*) + 1 AS NextPackageNumber FROM packages";
-        String insertSql = "INSERT INTO packages (ResidentID, TrackingNumber, Delivered) VALUES (?, ?, 'NO')";
-        String trackingNumber = null;
-
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            int nextPackageNumber = 0;
-            try (PreparedStatement countStatement = connection.prepareStatement(countSql)) {
-                try (ResultSet resultSet = countStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        nextPackageNumber = resultSet.getInt("NextPackageNumber");
-                    }
-                }
-            }
-
-            trackingNumber = String.format("PKG-%05d", nextPackageNumber);
-            try (PreparedStatement insertStatement = connection.prepareStatement(insertSql)) {
-                insertStatement.setInt(1, residentId);
-                insertStatement.setString(2, trackingNumber);
-                int rowsInserted = insertStatement.executeUpdate();
-                if (rowsInserted > 0) {
-                    System.out.println("Package added successfully for ResidentID: " + residentId + " with TrackingNumber: " + trackingNumber);
-                }
-            }
-        } catch (SQLException e) {
+        try {
+            List<String> packages = readLines(PACKAGES_FILE);
+            int nextPackageNumber = packages.size() + 1;
+            String trackingNumber = String.format("PKG-%05d", nextPackageNumber);
+            
+            String newPackage = String.format("ResidentID: %d, TrackingNumber: %s, Delivered: NO",
+                    residentId, trackingNumber);
+            appendToFile(PACKAGES_FILE, newPackage);
+            
+            System.out.println("Package added successfully for ResidentID: " + residentId +
+                    " with TrackingNumber: " + trackingNumber);
+            return trackingNumber;
+        } catch (IOException e) {
             System.out.println("Error adding package:");
             e.printStackTrace();
+            return null;
         }
-
-        return trackingNumber;
     }
 
-    public ResultSet checkPackages(int residentId) throws SQLException {
-        String sql = "SELECT TrackingNumber, Delivered FROM packages WHERE ResidentID = ?";
-        Connection connection = DatabaseConnection.getConnection();
-        PreparedStatement statement = connection.prepareStatement(sql);
-        statement.setInt(1, residentId);
-        return statement.executeQuery();
+    public List<String> checkPackages(int residentId) {
+        try {
+            List<String> packages = readLines(PACKAGES_FILE);
+            List<String> residentPackages = new ArrayList<>();
+            
+            for (String pkg : packages) {
+                if (pkg.startsWith("ResidentID: " + residentId)) {
+                    residentPackages.add(pkg);
+                }
+            }
+            return residentPackages;
+        } catch (IOException e) {
+            System.out.println("Error checking packages:");
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     public void deliverPackage(String trackingNumber) {
-        String sql = "UPDATE packages SET Delivered = 'YES' WHERE TrackingNumber = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setString(1, trackingNumber);
-            int rowsUpdated = statement.executeUpdate();
-            if (rowsUpdated > 0) {
-                System.out.println("Package delivered: " + trackingNumber);
+        try {
+            List<String> packages = readLines(PACKAGES_FILE);
+            List<String> updatedPackages = new ArrayList<>();
+            
+            for (String pkg : packages) {
+                if (pkg.contains("TrackingNumber: " + trackingNumber)) {
+                    pkg = pkg.replace("Delivered: NO", "Delivered: YES");
+                    System.out.println("Package delivered: " + trackingNumber);
+                }
+                updatedPackages.add(pkg);
             }
-        } catch (SQLException e) {
+            
+            writeLines(PACKAGES_FILE, updatedPackages);
+        } catch (IOException e) {
             System.out.println("Error updating package delivery status:");
             e.printStackTrace();
         }
     }
 
-    // public ResultSet searchResident(String searchText) throws SQLException {
-    //     String sql = "SELECT * FROM residents WHERE FirstName LIKE ? OR LastName LIKE ? OR ResidentID = ?";
-    //     Connection connection = DatabaseConnection.getConnection();
-    //     PreparedStatement statement = connection.prepareStatement(sql);
-    //     statement.setString(1, "%" + searchText + "%");
-    //     statement.setString(2, "%" + searchText + "%");
-    //     statement.setString(3, searchText);
-    //     return statement.executeQuery();
-    // }
-    public ResultSet searchResident(String searchText) throws SQLException {
-        String sql = "SELECT * FROM residents WHERE LOWER(FirstName) LIKE LOWER(?) OR LOWER(LastName) LIKE LOWER(?) OR ResidentID = ?";
-        Connection connection = DatabaseConnection.getConnection();
-        PreparedStatement statement = connection.prepareStatement(sql);
-        statement.setString(1, "%" + searchText + "%");
-        statement.setString(2, "%" + searchText + "%");
-        statement.setString(3, searchText);
-        return statement.executeQuery();
+    public List<String> searchResident(String searchText) {
+        try {
+            List<String> residents = readLines(RESIDENTS_FILE);
+            List<String> matches = new ArrayList<>();
+            searchText = searchText.toLowerCase();
+            
+            for (String resident : residents) {
+                String[] parts = resident.split(", ");
+                String id = parts[0].split(": ")[1];
+                String firstName = parts[1].split(": ")[1].toLowerCase();
+                String lastName = parts[2].split(": ")[1].toLowerCase();
+                
+                if (id.equals(searchText) || 
+                    firstName.contains(searchText) || 
+                    lastName.contains(searchText) || 
+                    (firstName + " " + lastName).contains(searchText)) {
+                    matches.add(resident);
+                }
+            }
+            return matches;
+        } catch (IOException e) {
+            System.out.println("Error searching residents:");
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+    // Utility methods for file operations
+    public List<String> readLines(String filename) throws IOException {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        return lines;
+    }
+
+    private void appendToFile(String filename, String content) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) {
+            writer.write(content);
+            writer.newLine();
+        }
+    }
+
+    public void writeLines(String filename, List<String> lines) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
+        }
     }
 }
