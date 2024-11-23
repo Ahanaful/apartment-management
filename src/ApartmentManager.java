@@ -165,4 +165,40 @@ public class ApartmentManager {
             }
         }
     }
+    public int recordLockoutWithCost(int residentId) throws IOException {
+    List<String> lockoutData = readLines("src/lockouts.txt");
+    List<String> updatedLockoutData = new ArrayList<>();
+    int lockoutCount = 0;
+
+    boolean found = false;
+    for (String line : lockoutData) {
+        if (line.contains("ResidentID: " + residentId)) {
+            String[] parts = line.split(", ");
+            lockoutCount = Integer.parseInt(parts[1].split(": ")[1]) + 1;
+            line = "ResidentID: " + residentId + ", Lockouts: " + lockoutCount;
+            found = true;
+        }
+        updatedLockoutData.add(line);
+    }
+
+    if (!found) {
+        lockoutCount = 1;
+        updatedLockoutData.add("ResidentID: " + residentId + ", Lockouts: " + lockoutCount);
+    }
+
+    writeLines("src/lockouts.txt", updatedLockoutData);
+
+    // Return cost based on the lockout count
+    return calculateLockoutCost(lockoutCount);
+}
+
+private int calculateLockoutCost(int lockoutCount) {
+    if (lockoutCount <= 3) return 0;
+    if (lockoutCount == 4) return 10;
+    if (lockoutCount == 5) return 15;
+    if (lockoutCount == 6) return 20;
+    return 25;
+}
+
+    
 }
