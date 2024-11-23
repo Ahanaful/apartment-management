@@ -165,40 +165,122 @@ public class ApartmentManager {
             }
         }
     }
-    public int recordLockoutWithCost(int residentId) throws IOException {
-    List<String> lockoutData = readLines("src/lockouts.txt");
-    List<String> updatedLockoutData = new ArrayList<>();
-    int lockoutCount = 0;
-
-    boolean found = false;
-    for (String line : lockoutData) {
-        if (line.contains("ResidentID: " + residentId)) {
-            String[] parts = line.split(", ");
-            lockoutCount = Integer.parseInt(parts[1].split(": ")[1]) + 1;
-            line = "ResidentID: " + residentId + ", Lockouts: " + lockoutCount;
-            found = true;
-        }
-        updatedLockoutData.add(line);
+    public List<String> viewLockouts() throws IOException {
+        return readLines("src/lockouts.txt");
     }
-
-    if (!found) {
-        lockoutCount = 1;
-        updatedLockoutData.add("ResidentID: " + residentId + ", Lockouts: " + lockoutCount);
-    }
-
-    writeLines("src/lockouts.txt", updatedLockoutData);
-
-    // Return cost based on the lockout count
-    return calculateLockoutCost(lockoutCount);
-}
-
-private int calculateLockoutCost(int lockoutCount) {
-    if (lockoutCount <= 3) return 0;
-    if (lockoutCount == 4) return 10;
-    if (lockoutCount == 5) return 15;
-    if (lockoutCount == 6) return 20;
-    return 25;
-}
 
     
+    public String recordLockout(int residentId) {
+        try {
+            // Read all lockouts
+            List<String> lockouts = readLines(LOCKOUTS_FILE);
+            List<String> updatedLockouts = new ArrayList<>();
+            boolean residentFound = false;
+            String costMessage = "";
+
+            for (String record : lockouts) {
+                if (record.startsWith("ResidentID: " + residentId)) {
+                    residentFound = true;
+
+                    // Parse and update the lockouts count
+                    String[] parts = record.split(", ");
+                    int lockoutCount = Integer.parseInt(parts[1].split(": ")[1]) + 1;
+
+                    // Calculate cost
+                    int cost = 0;
+                    if (lockoutCount > 3) {
+                        cost = Math.min(25, (lockoutCount - 3) * 5);
+                    }
+
+                    costMessage = "Lockout recorded. Total Lockouts: " + lockoutCount + ". Due Payments: $" + cost;
+
+                    // Update the record
+                    record = "ResidentID: " + residentId + ", Lockouts: " + lockoutCount + ", Due Payments: $" + cost;
+                }
+                updatedLockouts.add(record);
+            }
+
+            // If resident not found, return an error message
+            if (!residentFound) {
+                return "Resident ID " + residentId + " not found. Please check the lockouts file.";
+            }
+
+            // Write the updated list back to the file
+            writeLines(LOCKOUTS_FILE, updatedLockouts);
+            return costMessage;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error recording lockout.";
+        }
+    }
+
+    public String getLockouts(int residentId) throws IOException {
+        List<String> lockoutData = readLines("src/lockouts.txt");
+        for (String line : lockoutData) {
+            if (line.contains("ResidentID: " + residentId)) {
+                return line;
+            }
+        }
+        return "ResidentID: " + residentId + " not found.";
+    }
+    
+    
+    public int recordLockoutWithCost(int residentId) throws IOException {
+        List<String> lockoutData = readLines("src/lockouts.txt");
+        List<String> updatedLockoutData = new ArrayList<>();
+        int lockoutCount = 0;
+        int duePayments = 0;
+
+        boolean found = false;
+        for (String line : lockoutData) {
+            if (line.contains("ResidentID: " + residentId)) {
+                String[] parts = line.split(", ");
+                lockoutCount = Integer.parseInt(parts[1].split(": ")[1]) + 1;
+
+                // Calculate the due payments
+                duePayments = calculateLockoutCost(lockoutCount);
+
+                // Update the line with the new lockout count and due payments
+                line = "ResidentID: " + residentId + ", Lockouts: " + lockoutCount + ", Due Payments: $" + duePayments;
+                found = true;
+            }
+            updatedLockoutData.add(line);
+        }
+
+        if (!found) {
+            // If the resident doesn't exist, add a new entry
+            lockoutCount = 1;
+            duePayments = calculateLockoutCost(lockoutCount);
+            updatedLockoutData.add("ResidentID: " + residentId + ", Lockouts: " + lockoutCount + ", DuePayments: $" + duePayments);
+        }
+
+        // Write the updated data back to the file
+        writeLines("src/lockouts.txt", updatedLockoutData);
+
+        // Return the cost of the current lockout
+        return duePayments;
+    }
+
+    
+
+	
+		
+    public int calculateLockoutCost(int lockoutCount) {
+        if (lockoutCount < 3) return 0;      // No charge for 2 or fewer lockouts
+        if (lockoutCount == 3) return 5;     // $5 for 3 lockouts
+        if (lockoutCount == 4) return 10;    // $10 for 4 lockouts
+        if (lockoutCount == 5) return 15;    // $15 for 5 lockouts
+        if (lockoutCount == 6) return 20;    // $20 for 6 lockouts
+        return 25;                           // $25 for 7 or more lockouts
+    }
+
+
+
+
 }
+
+		
+		
+	
+
