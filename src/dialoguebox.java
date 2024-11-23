@@ -317,4 +317,42 @@ public class DialogueBox extends JFrame {
             e.printStackTrace();
         }
     }
+    private JPanel createLockoutPanel() {
+    JPanel panel = new JPanel(new BorderLayout());
+    JPanel inputPanel = new JPanel(new FlowLayout());
+
+    JTextField residentIdInput = new JTextField(10);
+    JButton recordLockoutButton = new JButton("Record Lockout");
+    JTextArea lockoutDisplay = new JTextArea();
+    lockoutDisplay.setEditable(false);
+
+    inputPanel.add(new JLabel("Resident ID:"));
+    inputPanel.add(residentIdInput);
+    inputPanel.add(recordLockoutButton);
+
+    recordLockoutButton.addActionListener(e -> {
+        try {
+            int residentId = Integer.parseInt(residentIdInput.getText());
+            int cost = apartmentManager.recordLockoutWithCost(residentId);
+
+            List<String> lockoutData = apartmentManager.viewLockouts();
+            for (String line : lockoutData) {
+                if (line.contains("ResidentID: " + residentId)) {
+                    lockoutDisplay.setText(line + "\nCost for this lockout: $" + cost);
+                    break;
+                }
+            }
+        } catch (NumberFormatException ex) {
+            lockoutDisplay.setText("Please enter a valid Resident ID.");
+        } catch (IOException ex) {
+            lockoutDisplay.setText("Error recording lockout: " + ex.getMessage());
+        }
+    });
+
+    panel.add(inputPanel, BorderLayout.NORTH);
+    panel.add(new JScrollPane(lockoutDisplay), BorderLayout.CENTER);
+
+    return panel;
+}
+
 }
