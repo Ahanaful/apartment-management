@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 
 
+@SuppressWarnings("serial")
 public class DialogueBox extends JFrame {
     private JTextField residentSearchField, trackingNumberField, residentIdField, tempCardResidentIdField;
     private JTextArea residentInfoArea, packageInfoArea, cardStatus;
@@ -27,7 +28,7 @@ public class DialogueBox extends JFrame {
             tabbedPane.addTab("Residents", createResidentPanel());
             tabbedPane.addTab("Packages", createPackagePanel());
             tabbedPane.addTab("Temporary Cards", createTempCardPanel());
-            tabbedPane.addTab("Lockouts", createPlaceholderPanel("Lockout Management"));
+            
             tabbedPane.addTab("Lockouts", createLockoutPanel());
 
     
@@ -176,24 +177,60 @@ public class DialogueBox extends JFrame {
     private JPanel createLockoutPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         JPanel inputPanel = new JPanel(new FlowLayout());
+
         JTextField residentIdInput = new JTextField(10);
         JButton recordButton = new JButton("Record Lockout");
+        JButton viewAllButton = new JButton("View All Lockouts");
+        
+
         JTextArea lockoutDisplay = new JTextArea();
         lockoutDisplay.setEditable(false);
 
         inputPanel.add(new JLabel("Resident ID:"));
         inputPanel.add(residentIdInput);
         inputPanel.add(recordButton);
+        inputPanel.add(viewAllButton);
+        
 
+        // Record Lockout Action
         recordButton.addActionListener(e -> {
-            // Add lockout recording functionality here
-            // You'll need to add this method to ApartmentManager
+            try {
+                int residentId = Integer.parseInt(residentIdInput.getText());
+                int cost = apartmentManager.recordLockoutWithCost(residentId);
+
+                List<String> lockoutData = apartmentManager.viewLockouts();
+                for (String line : lockoutData) {
+                    if (line.contains("ResidentID: " + residentId)) {
+                        lockoutDisplay.setText(line + "\nCost for this lockout: $" + cost);
+                        break;
+                    }
+                }
+            } catch (NumberFormatException ex) {
+                lockoutDisplay.setText("Please enter a valid Resident ID.");
+            } catch (IOException ex) {
+                lockoutDisplay.setText("Error recording lockout: " + ex.getMessage());
+            }
         });
 
+
+        // View All Lockouts Action
+        viewAllButton.addActionListener(e -> {
+            try {
+                List<String> lockoutData = apartmentManager.viewLockouts();
+                lockoutDisplay.setText(String.join("\n", lockoutData));
+            } catch (IOException ex) {
+                lockoutDisplay.setText("Error fetching lockout data.");
+            }
+        });
+
+ 
         panel.add(inputPanel, BorderLayout.NORTH);
         panel.add(new JScrollPane(lockoutDisplay), BorderLayout.CENTER);
+
         return panel;
     }
+
+
     private void handleTempCardCheckout() {
         try {
             int residentId = Integer.parseInt(tempCardResidentIdField.getText());
@@ -319,42 +356,4 @@ public class DialogueBox extends JFrame {
             e.printStackTrace();
         }
     }
-    private JPanel createLockoutPanel() {
-    JPanel panel = new JPanel(new BorderLayout());
-    JPanel inputPanel = new JPanel(new FlowLayout());
-
-    JTextField residentIdInput = new JTextField(10);
-    JButton recordLockoutButton = new JButton("Record Lockout");
-    JTextArea lockoutDisplay = new JTextArea();
-    lockoutDisplay.setEditable(false);
-
-    inputPanel.add(new JLabel("Resident ID:"));
-    inputPanel.add(residentIdInput);
-    inputPanel.add(recordLockoutButton);
-
-    recordLockoutButton.addActionListener(e -> {
-        try {
-            int residentId = Integer.parseInt(residentIdInput.getText());
-            int cost = apartmentManager.recordLockoutWithCost(residentId);
-
-            List<String> lockoutData = apartmentManager.viewLockouts();
-            for (String line : lockoutData) {
-                if (line.contains("ResidentID: " + residentId)) {
-                    lockoutDisplay.setText(line + "\nCost for this lockout: $" + cost);
-                    break;
-                }
-            }
-        } catch (NumberFormatException ex) {
-            lockoutDisplay.setText("Please enter a valid Resident ID.");
-        } catch (IOException ex) {
-            lockoutDisplay.setText("Error recording lockout: " + ex.getMessage());
-        }
-    });
-
-    panel.add(inputPanel, BorderLayout.NORTH);
-    panel.add(new JScrollPane(lockoutDisplay), BorderLayout.CENTER);
-
-    return panel;
-}
-
 }
