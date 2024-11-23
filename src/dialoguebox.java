@@ -28,6 +28,8 @@ public class DialogueBox extends JFrame {
             tabbedPane.addTab("Packages", createPackagePanel());
             tabbedPane.addTab("Temporary Cards", createTempCardPanel());
             tabbedPane.addTab("Lockouts", createPlaceholderPanel("Lockout Management"));
+            tabbedPane.addTab("Lockouts", createLockoutPanel());
+
     
             add(tabbedPane);
     }
