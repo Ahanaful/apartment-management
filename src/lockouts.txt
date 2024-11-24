@@ -1,10 +1,20 @@
-ResidentID: 1, Lockouts: 2
-ResidentID: 2, Lockouts: 0
-ResidentID: 3, Lockouts: 1
-ResidentID: 4, Lockouts: 3
-ResidentID: 5, Lockouts: 1
-ResidentID: 6, Lockouts: 2
-ResidentID: 7, Lockouts: 0
-ResidentID: 8, Lockouts: 1
-ResidentID: 9, Lockouts: 2
-ResidentID: 10, Lockouts: 4
+ResidentID: 1, LockoutNumber: 1, Charge: $0, Date: 2024-01-15
+ResidentID: 1, LockoutNumber: 2, Charge: $0, Date: 2024-02-20
+ResidentID: 2, LockoutNumber: 0, Charge: $0, Date: 2024-01-01
+ResidentID: 3, LockoutNumber: 1, Charge: $0, Date: 2024-02-15
+ResidentID: 4, LockoutNumber: 1, Charge: $0, Date: 2024-01-10
+ResidentID: 4, LockoutNumber: 2, Charge: $0, Date: 2024-02-05
+ResidentID: 4, LockoutNumber: 3, Charge: $5, Date: 2024-03-15
+ResidentID: 5, LockoutNumber: 1, Charge: $0, Date: 2024-02-28
+ResidentID: 6, LockoutNumber: 1, Charge: $0, Date: 2024-01-25
+ResidentID: 6, LockoutNumber: 2, Charge: $0, Date: 2024-03-01
+ResidentID: 7, LockoutNumber: 0, Charge: $0, Date: 2024-01-01
+ResidentID: 8, LockoutNumber: 1, Charge: $0, Date: 2024-02-10
+ResidentID: 9, LockoutNumber: 1, Charge: $0, Date: 2024-01-30
+ResidentID: 9, LockoutNumber: 2, Charge: $0, Date: 2024-03-05
+ResidentID: 10, LockoutNumber: 1, Charge: $0, Date: 2024-01-05
+ResidentID: 10, LockoutNumber: 2, Charge: $0, Date: 2024-02-10
+ResidentID: 10, LockoutNumber: 3, Charge: $5, Date: 2024-03-01
+ResidentID: 10, LockoutNumber: 4, Charge: $10, Date: 2024-03-20
+ResidentID: 2, LockoutNumber: 2, Charge: $0, Date: 2024-11-22
+ResidentID: 4, LockoutNumber: 4, Charge: $10, Date: 2024-11-23
