@@ -181,7 +181,6 @@ public class DialogueBox extends JFrame {
         JTextField residentIdInput = new JTextField(10);
         JButton recordButton = new JButton("Record Lockout");
         JButton viewAllButton = new JButton("View All Lockouts");
-        
 
         JTextArea lockoutDisplay = new JTextArea();
         lockoutDisplay.setEditable(false);
@@ -190,28 +189,20 @@ public class DialogueBox extends JFrame {
         inputPanel.add(residentIdInput);
         inputPanel.add(recordButton);
         inputPanel.add(viewAllButton);
-        
 
         // Record Lockout Action
         recordButton.addActionListener(e -> {
             try {
                 int residentId = Integer.parseInt(residentIdInput.getText());
-                int cost = apartmentManager.recordLockoutWithCost(residentId);
+                String newLockout = apartmentManager.recordLockoutWithDetails(residentId);
 
-                List<String> lockoutData = apartmentManager.viewLockouts();
-                for (String line : lockoutData) {
-                    if (line.contains("ResidentID: " + residentId)) {
-                        lockoutDisplay.setText(line + "\nCost for this lockout: $" + cost);
-                        break;
-                    }
-                }
+                lockoutDisplay.setText("New Lockout Added:\n" + newLockout);
             } catch (NumberFormatException ex) {
                 lockoutDisplay.setText("Please enter a valid Resident ID.");
             } catch (IOException ex) {
                 lockoutDisplay.setText("Error recording lockout: " + ex.getMessage());
             }
         });
-
 
         // View All Lockouts Action
         viewAllButton.addActionListener(e -> {
@@ -223,12 +214,12 @@ public class DialogueBox extends JFrame {
             }
         });
 
- 
         panel.add(inputPanel, BorderLayout.NORTH);
         panel.add(new JScrollPane(lockoutDisplay), BorderLayout.CENTER);
 
         return panel;
     }
+
 
 
     private void handleTempCardCheckout() {
