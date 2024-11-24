@@ -7,34 +7,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
+// This file contains the whole GUI for this application.
 
-@SuppressWarnings("serial")
-public class DialogueBox extends JFrame {
+public class dialoguebox extends JFrame {
     private JTextField residentSearchField, trackingNumberField, residentIdField, tempCardResidentIdField;
     private JTextArea residentInfoArea, packageInfoArea, cardStatus;
     private ApartmentManager apartmentManager;
-
-    public DialogueBox() {
+    // This is the constructor for the dialoguebox class.
+    public dialoguebox() {
                 apartmentManager = new ApartmentManager();
                 setTitle("Apartment Community Management System");
                 setSize(800, 600);
                 setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 initComponents();
             }
-        private void initComponents() {
-            JTabbedPane tabbedPane = new JTabbedPane();
+    // This method initializes the components for the dialoguebox.
+    private void initComponents() {
+        JTabbedPane tabbedPane = new JTabbedPane();
             trackingNumberField = new JTextField();
             tabbedPane.addTab("Residents", createResidentPanel());
             tabbedPane.addTab("Packages", createPackagePanel());
             tabbedPane.addTab("Temporary Cards", createTempCardPanel());
-            
             tabbedPane.addTab("Lockouts", createLockoutPanel());
-
     
             add(tabbedPane);
     }
-                
+               
+    // This method creates the resident panel for the dialoguebox.
     private JPanel createResidentPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         JPanel searchPanel = new JPanel(new FlowLayout());
@@ -55,7 +57,7 @@ public class DialogueBox extends JFrame {
         panel.add(new JScrollPane(residentInfoArea), BorderLayout.CENTER);
         return panel;
     }
-
+    // This method creates the package panel for the dialoguebox.
     private JPanel createPackagePanel() {
         JPanel panel = new JPanel(new BorderLayout());
         JPanel formPanel = new JPanel(new GridLayout(4, 2));
@@ -84,15 +86,109 @@ public class DialogueBox extends JFrame {
         panel.add(new JScrollPane(packageInfoArea), BorderLayout.CENTER);
         return panel;
     }
-
-    private JPanel createPlaceholderPanel(String labelText) {
+    // This method creates the lockout panel for the dialoguebox.
+    private JPanel createLockoutPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel(labelText, SwingConstants.CENTER);
-        panel.add(label, BorderLayout.CENTER);
+        JPanel inputPanel = new JPanel(new FlowLayout());
+        
+        JTextField lockoutResidentIdField = new JTextField(10);
+        JButton recordButton = new JButton("Record Lockout");
+        JButton checkHistoryButton = new JButton("Check History");
+        JTextArea lockoutDisplay = new JTextArea();
+        lockoutDisplay.setEditable(false);
+
+        inputPanel.add(new JLabel("Resident ID:"));
+        inputPanel.add(lockoutResidentIdField);
+        inputPanel.add(recordButton);
+        inputPanel.add(checkHistoryButton);
+
+        recordButton.addActionListener(e -> {
+            try {
+                int residentId = Integer.parseInt(lockoutResidentIdField.getText());
+                handleLockout(residentId, lockoutDisplay);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid Resident ID.");
+            }
+        });
+
+        checkHistoryButton.addActionListener(e -> {
+            try {
+                int residentId = Integer.parseInt(lockoutResidentIdField.getText());
+                displayLockoutHistory(residentId, lockoutDisplay);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid Resident ID.");
+            }
+        });
+
+        panel.add(inputPanel, BorderLayout.NORTH);
+        panel.add(new JScrollPane(lockoutDisplay), BorderLayout.CENTER);
         return panel;
     }
-                
-
+    // This method handles the lockout for the dialoguebox.
+    private void handleLockout(int residentId, JTextArea display) {
+        try {
+            List<String> lockouts = apartmentManager.readLines("src/lockouts.txt");
+            int lockoutCount = 0;
+            
+            // Count existing lockouts for this resident
+            for (String lockout : lockouts) {
+                if (lockout.contains("ResidentID: " + residentId)) {
+                    lockoutCount++;
+                }
+            }
+            
+            // Calculate charge
+            int charge = 0;
+            if (lockoutCount >= 2) {
+                charge = Math.min(25, (lockoutCount - 1) * 5);
+                JOptionPane.showMessageDialog(this, 
+                    "Warning: This is lockout #" + (lockoutCount + 1) + "\nCharge: $" + charge);
+            }
+            
+            // Add new lockout record
+            String newLockout = String.format("ResidentID: %d, LockoutNumber: %d, Charge: $%d, Date: %s",
+                residentId, lockoutCount + 1, charge, java.time.LocalDate.now());
+            lockouts.add(newLockout);
+            
+            apartmentManager.writeLines("src/lockouts.txt", lockouts);
+            displayLockoutHistory(residentId, display);
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error processing lockout.");
+            e.printStackTrace();
+        }
+    }
+    // This method displays the lockout history for the dialoguebox.
+    private void displayLockoutHistory(int residentId, JTextArea display) {
+        try {
+            List<String> lockouts = Files.readAllLines(Paths.get("src/lockouts.txt"));
+            StringBuilder history = new StringBuilder();
+            history.append("Lockout History for Resident ID: ").append(residentId).append("\n\n");
+            
+            boolean foundHistory = false;
+            for (String lockout : lockouts) {
+                if (lockout.startsWith("ResidentID: " + residentId + ",")) {
+                    foundHistory = true;
+                    String[] parts = lockout.split(", ");
+                    history.append("Lockout Number: ").append(parts[1].split(": ")[1]).append("\n");
+                    history.append("Charge: ").append(parts[2].split(": ")[1]).append("\n");
+                    history.append("Date: ").append(parts[3].split(": ")[1]).append("\n");
+                    history.append("------------------------\n");
+                }
+            }
+            
+            if (!foundHistory) {
+                history.append("No lockout history found for this resident.");
+            }
+            
+            display.setText(history.toString());
+            
+        } catch (IOException e) {
+            display.setText("Error retrieving lockout history: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    // This method searches the resident for the dialoguebox.
     private void searchResident() {
         String searchText = residentSearchField.getText().toLowerCase().trim();
         try {
@@ -125,7 +221,7 @@ public class DialogueBox extends JFrame {
             e.printStackTrace();
         }
     }
-
+    // This method adds the package for the dialoguebox.
     private void addPackage() {
         try {
             int residentId = Integer.parseInt(residentIdField.getText());
@@ -144,7 +240,7 @@ public class DialogueBox extends JFrame {
             e.printStackTrace();
         }
     }
-
+    // This method checks the packages for the dialoguebox.
     private void checkPackages() {
         try {
             int residentId = Integer.parseInt(residentIdField.getText());
@@ -172,56 +268,7 @@ public class DialogueBox extends JFrame {
             e.printStackTrace();
         }
     }
-
-    // Add new method for the Lockouts tab
-    private JPanel createLockoutPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        JPanel inputPanel = new JPanel(new FlowLayout());
-
-        JTextField residentIdInput = new JTextField(10);
-        JButton recordButton = new JButton("Record Lockout");
-        JButton viewAllButton = new JButton("View All Lockouts");
-
-        JTextArea lockoutDisplay = new JTextArea();
-        lockoutDisplay.setEditable(false);
-
-        inputPanel.add(new JLabel("Resident ID:"));
-        inputPanel.add(residentIdInput);
-        inputPanel.add(recordButton);
-        inputPanel.add(viewAllButton);
-
-        // Record Lockout Action
-        recordButton.addActionListener(e -> {
-            try {
-                int residentId = Integer.parseInt(residentIdInput.getText());
-                String newLockout = apartmentManager.recordLockoutWithDetails(residentId);
-
-                lockoutDisplay.setText("New Lockout Added:\n" + newLockout);
-            } catch (NumberFormatException ex) {
-                lockoutDisplay.setText("Please enter a valid Resident ID.");
-            } catch (IOException ex) {
-                lockoutDisplay.setText("Error recording lockout: " + ex.getMessage());
-            }
-        });
-
-        // View All Lockouts Action
-        viewAllButton.addActionListener(e -> {
-            try {
-                List<String> lockoutData = apartmentManager.viewLockouts();
-                lockoutDisplay.setText(String.join("\n", lockoutData));
-            } catch (IOException ex) {
-                lockoutDisplay.setText("Error fetching lockout data.");
-            }
-        });
-
-        panel.add(inputPanel, BorderLayout.NORTH);
-        panel.add(new JScrollPane(lockoutDisplay), BorderLayout.CENTER);
-
-        return panel;
-    }
-
-
-
+    // This method handles the temp card checkout for the dialoguebox.
     private void handleTempCardCheckout() {
         try {
             int residentId = Integer.parseInt(tempCardResidentIdField.getText());
@@ -248,12 +295,12 @@ public class DialogueBox extends JFrame {
             
         } catch (NumberFormatException e) {
             cardStatus.setText("Please enter a valid Resident ID.");
-        } catch (IOException e) {
+        } catch (Exception e) {
             cardStatus.setText("Error processing temp card request.");
             e.printStackTrace();
         }
     }
-
+    // This method handles the temp card return for the dialoguebox.
     private void handleTempCardReturn() {
         try {
             int residentId = Integer.parseInt(tempCardResidentIdField.getText());
@@ -281,13 +328,12 @@ public class DialogueBox extends JFrame {
             
         } catch (NumberFormatException e) {
             cardStatus.setText("Please enter a valid Resident ID.");
-        } catch (IOException e) {
+        } catch (Exception e) {
             cardStatus.setText("Error processing temp card return.");
             e.printStackTrace();
         }
     }
-
-    // Add new method for the Temp Cards tab
+    // This method creates the temp card panel for the dialoguebox.
     private JPanel createTempCardPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         JPanel inputPanel = new JPanel(new FlowLayout());
@@ -313,7 +359,7 @@ public class DialogueBox extends JFrame {
         panel.add(new JScrollPane(cardStatus), BorderLayout.CENTER);
         return panel;
     }
-
+    // This method checks if the card is already checked out for the dialoguebox.
     private boolean isCardAlreadyCheckedOut(int residentID) {
         try (BufferedReader reader = new BufferedReader(new FileReader("src/tempCards.txt"))) {
             String line;
@@ -328,7 +374,7 @@ public class DialogueBox extends JFrame {
         }
         return false;
     }
-
+    // This method marks the package as delivered for the dialoguebox.
     private void markPackageDelivered() {
         try {
             String trackingNumber = JOptionPane.showInputDialog(this, "Enter tracking number to mark as delivered:");
@@ -348,3 +394,4 @@ public class DialogueBox extends JFrame {
         }
     }
 }
+

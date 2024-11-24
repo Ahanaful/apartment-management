@@ -3,32 +3,16 @@ package src;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import java.nio.charset.StandardCharsets;
-
+import java.io.FileReader;
+import java.io.IOException;
+// This is the main class for the ApartmentManager. This class contains the methods for adding residents, packages, and lockouts.
 public class ApartmentManager {
+    // This is the file path for the residents.txt and packages.txt files.
     private static final String RESIDENTS_FILE = "src/residents.txt";
     private static final String PACKAGES_FILE = "src/packages.txt";
     private static final String LOCKOUTS_FILE = "src/lockouts.txt";
-    private static final String TEMP_CARDS_FILE = "src/tempCards.txt";
-
-    public void addResident(String firstName, String lastName, int roomNumber) {
-        try {
-            List<String> residents = readLines(RESIDENTS_FILE);
-            int nextId = residents.size() + 1;
-            String newResident = String.format("ResidentID: %d, FirstName: %s, LastName: %s, RoomNumber: %d",
-                    nextId, firstName, lastName, roomNumber);
-            
-            appendToFile(RESIDENTS_FILE, newResident);
-            // Initialize other records
-            appendToFile(LOCKOUTS_FILE, String.format("ResidentID: %d, Lockouts: 0", nextId));
-            appendToFile(TEMP_CARDS_FILE, String.format("ResidentID: %d, TempCardCheckedOut: No", nextId));
-            System.out.println("Resident added successfully!");
-        } catch (IOException e) {
-            System.out.println("Error adding resident:");
-            e.printStackTrace();
-        }
-    }
-
+    
+    // This method adds a package to the packages.txt file. 
     public String addPackage(int residentId) {
         try {
             List<String> packages = readLines(PACKAGES_FILE);
@@ -42,13 +26,13 @@ public class ApartmentManager {
             System.out.println("Package added successfully for ResidentID: " + residentId +
                     " with TrackingNumber: " + trackingNumber);
             return trackingNumber;
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Error adding package:");
             e.printStackTrace();
             return null;
         }
     }
-
+    // This method checks the packages for a resident.
     public List<String> checkPackages(int residentId) {
         try {
             List<String> packages = readLines(PACKAGES_FILE);
@@ -60,13 +44,13 @@ public class ApartmentManager {
                 }
             }
             return residentPackages;
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Error checking packages:");
             e.printStackTrace();
             return new ArrayList<>();
         }
     }
-
+    // This method delivers a package to the packages.txt file.
     public void deliverPackage(String trackingNumber) {
         try {
             List<String> packages = readLines(PACKAGES_FILE);
@@ -81,12 +65,12 @@ public class ApartmentManager {
             }
             
             writeLines(PACKAGES_FILE, updatedPackages);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Error updating package delivery status:");
             e.printStackTrace();
         }
     }
-
+    // This method searches the resident for the residents.txt file.
     public List<String> searchResident(String searchText) {
         try {
             List<String> residents = readLines(RESIDENTS_FILE);
@@ -107,13 +91,13 @@ public class ApartmentManager {
                 }
             }
             return matches;
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Error searching residents:");
             e.printStackTrace();
             return new ArrayList<>();
         }
     }
-
+    // This method marks the package as delivered for the packages.txt file.
     public boolean markDelivered(String trackingNumber) {
         try {
             List<String> packages = Files.readAllLines(Paths.get("src/packages.txt"));
@@ -139,30 +123,39 @@ public class ApartmentManager {
     }
 
     // Utility methods for file operations
-    public List<String> readLines(String filename) throws IOException {
+    public List<String> readLines(String filename) {
         List<String> lines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 lines.add(line);
             }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + filename);
+            e.printStackTrace();
         }
         return lines;
     }
-
-    private void appendToFile(String filename, String content) throws IOException {
+    // This method appends to the file for the residents.txt file.
+    private void appendToFile(String filename, String content) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) {
             writer.write(content);
             writer.newLine();
+        } catch (IOException e) {
+            System.out.println("Error appending to file: " + filename);
+            e.printStackTrace();
         }
     }
-
-    public void writeLines(String filename, List<String> lines) throws IOException {
+    // This method writes the lines to the file for the residents.txt file. 
+    public void writeLines(String filename, List<String> lines) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             for (String line : lines) {
                 writer.write(line);
                 writer.newLine();
             }
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + filename);
+            e.printStackTrace();
         }
     }
     public List<String> viewLockouts() throws IOException {
@@ -171,7 +164,7 @@ public class ApartmentManager {
 
     
     public String recordLockout(int residentId) {
-        try {
+       
             // Read all lockouts
             List<String> lockouts = readLines(LOCKOUTS_FILE);
             List<String> updatedLockouts = new ArrayList<>();
@@ -208,11 +201,6 @@ public class ApartmentManager {
             // Write the updated list back to the file
             writeLines(LOCKOUTS_FILE, updatedLockouts);
             return costMessage;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "Error recording lockout.";
-        }
     }
 
     public String getLockouts(int residentId) throws IOException {
